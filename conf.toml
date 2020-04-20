@@ -1,0 +1,7 @@
+[server]
+hostport = "0.0.0.0:8080"
+
+[auth]
+state="7cd30adb113a"
+
+
