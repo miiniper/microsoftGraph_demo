@@ -59,10 +59,10 @@ func (s *Service) Close() error {
 
 func (s *Service) initHandler() {
 	s.router.GET("/auth/callback", GetCode)
-	//router.GET("/auth/callback", httpd.GetCode)
 	s.router.GET("/auth/login", MicrosoftLogin)
 	s.router.GET("/me", ShowUser)
 	s.router.GET("/profile", ShowProfile)
+	s.router.GET("/drive", ShowDrive)
 }
 
 func cors(inner http.Handler) http.Handler {

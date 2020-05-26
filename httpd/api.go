@@ -2,6 +2,7 @@ package httpd
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 
 var FirstCode string
 var Cli *http.Client
+var Token *oauth2.Token
 var microsoftGraphAPI map[string]string
 
 var MicrosoftGraphOauthConfig = &oauth2.Config{
@@ -53,6 +55,9 @@ func GetCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 	FirstCode = r.URL.Query().Get("code")
+	fmt.Println("=============")
+	fmt.Println("===  ", FirstCode)
+	fmt.Println("=============")
 	http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
 
 }
@@ -65,12 +70,12 @@ func SetCli(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 		return
 	}
-	tok, err := MicrosoftGraphOauthConfig.Exchange(ctx, code)
+	Token, err := MicrosoftGraphOauthConfig.Exchange(ctx, code)
 	if err != nil {
 		Loges.Error("get token  is err:", zap.Error(err))
 		return
 	}
-	Cli = MicrosoftGraphOauthConfig.Client(ctx, tok)
+	Cli = MicrosoftGraphOauthConfig.Client(ctx, Token)
 
 }
 
@@ -99,6 +104,37 @@ func GetMic(url string) []byte {
 
 }
 
+//Post 请求函数标准
+func PostMic(url string) []byte {
+
+	if Cli == nil {
+		Loges.Error("Cli  is err,: empty")
+		return nil
+	}
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		Loges.Error("new request is err:", zap.Error(err))
+	}
+
+	resp, err := Cli.Do(req)
+	if err != nil {
+		Loges.Error("do request is err:", zap.Error(err))
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		Loges.Error("ioutil ReadAll   is err:", zap.Error(err))
+	}
+
+	return body
+
+}
+
+//url := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+
 //显示组下的用户
 func ShowUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
@@ -119,6 +155,16 @@ func ShowProfile(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	url := microsoftGraphAPI["my profile"]
+	body := GetMic(url)
+	w.Write(body)
+
+}
+func ShowDrive(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if Cli == nil {
+		SetCli(w, r)
+	}
+
+	url := microsoftGraphAPI["my drive all"]
 	body := GetMic(url)
 	w.Write(body)
 
