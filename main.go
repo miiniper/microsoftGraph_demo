@@ -3,9 +3,9 @@ package main //import "onedrive_demo"
 import (
 	"fmt"
 	"microsoftGraph_demo/httpd"
-	"net/http"
-
-	"github.com/julienschmidt/httprouter"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/fsnotify/fsnotify"
 	"go.uber.org/zap"
@@ -29,13 +29,18 @@ func main() {
 		httpd.Loges.Info("Config file changed: ", zap.Any("", e.Name))
 	})
 
-	router := httprouter.New()
-	//	router.Handle("GET","/index",http.FileServer(http.Dir("template/")))
-	router.GET("/auth/callback", httpd.GetCode)
-	router.GET("/auth/login", httpd.MicrosoftLogin)
-	router.GET("/me", httpd.ShowUser)
-	router.GET("/profile", httpd.ShowProfile)
+	service, err := httpd.New(viper.GetString("server.hostport"))
+	if err != nil {
+		panic(err)
+	}
+	err = service.Start()
+	if err != nil {
+		panic(err)
+	}
+	defer service.Close()
 
-	httpd.Loges.Fatal("services :", zap.Any("", http.ListenAndServe(viper.GetString("server.hostPort"), router)))
+	terminate := make(chan os.Signal, 1)
+	signal.Notify(terminate, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGKILL)
+	<-terminate
 
 }
