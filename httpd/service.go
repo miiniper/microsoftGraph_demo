@@ -63,6 +63,7 @@ func (s *Service) initHandler() {
 	s.router.GET("/me", ShowUser)
 	s.router.GET("/profile", ShowProfile)
 	s.router.GET("/drive", ShowDrive)
+	s.router.GET("/msg", ShowMsg)
 }
 
 func cors(inner http.Handler) http.Handler {

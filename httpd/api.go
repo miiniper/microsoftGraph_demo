@@ -25,7 +25,7 @@ var MicrosoftGraphOauthConfig = &oauth2.Config{
 	RedirectURL:  "http://localhost:8080/auth/callback",
 	ClientID:     os.Getenv("CID"),
 	ClientSecret: os.Getenv("CS"),
-	Scopes:       []string{"files.readwrite"},
+	Scopes:       []string{"files.readwrite", "mail.read"},
 	Endpoint:     microsoft.AzureADEndpoint(""),
 }
 
@@ -35,6 +35,7 @@ func InitMGApi() {
 		"my profile":   "https://graph.microsoft.com/v1.0/me/",
 		"my drive all": "https://graph.microsoft.com/v1.0/me/drive/root/children",
 		"users":        "https://graph.microsoft.com/v1.0/users",
+		"message":      "https://graph.microsoft.com/v1.0/me/messages",
 	}
 }
 
@@ -165,6 +166,17 @@ func ShowDrive(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	url := microsoftGraphAPI["my drive all"]
+	body := GetMic(url)
+	w.Write(body)
+
+}
+
+func ShowMsg(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if Cli == nil {
+		SetCli(w, r)
+	}
+
+	url := microsoftGraphAPI["message"]
 	body := GetMic(url)
 	w.Write(body)
 
